@@ -664,6 +664,54 @@ namespace FakeItEasy.Specs
                 .x(() => dummy.Should().NotBeNull());
         }
 
+        [Scenario]
+        public void StructWithLongConstructorCreation(StructWithLongConstructor dummy)
+        {
+            "Given a value type with multiple constructors"
+                .See<StructWithLongConstructor>();
+
+            "When a dummy of that type is requested"
+                .x(() => dummy = this.CreateDummy<StructWithLongConstructor>());
+
+            "Then the dummy is created via the longer constructor"
+                .x(() => dummy.CalledConstructor.Should().Be("(string, int)"));
+        }
+
+        [Scenario]
+        public void StructWithLongConstructorWhoseArgumentsCannotBeResolvedCreation(StructWithLongConstructorWhoseArgumentsCannotBeResolved dummy)
+        {
+            "Given a value type with multiple constructors"
+                .See<StructWithLongConstructorWhoseArgumentsCannotBeResolved>();
+
+            "And its longer constructor's argument cannot be resolved"
+                .See(() => new StructWithLongConstructorWhoseArgumentsCannotBeResolved(A.Dummy<ClassWhoseDummyFactoryThrows>(), A.Dummy<int>()));
+
+            "When a dummy of that type is requested"
+                .x(() => dummy = this.CreateDummy<StructWithLongConstructorWhoseArgumentsCannotBeResolved>());
+
+            "Then it returns a dummy"
+                .x(() => dummy.Should().NotBeNull());
+
+            "And the dummy is created via the shorter constructor"
+                .x(() => dummy.CalledConstructor.Should().Be("(int)"));
+        }
+
+        [Scenario]
+        public void StructWithSingleConstructorWhoseArgumentsCannotBeResolvedCreation(StructWithSingleConstructorWhoseArgumentsCannotBeResolved dummy)
+        {
+            "Given a value type with a non-default constructor"
+                .See<StructWithSingleConstructorWhoseArgumentsCannotBeResolved>();
+
+            "And its constructor's argument cannot be resolved"
+                .See(() => new StructWithSingleConstructorWhoseArgumentsCannotBeResolved(A.Dummy<ClassWhoseDummyFactoryThrows>(), A.Dummy<int>()));
+
+            "When a dummy of that type is requested"
+                .x(() => dummy = this.CreateDummy<StructWithSingleConstructorWhoseArgumentsCannotBeResolved>());
+
+            "Then the dummy is created via the default constructor"
+                .x(() => dummy.CalledConstructor.Should().BeNull());
+        }
+
         public class ClassWithNoPublicConstructors
         {
             private ClassWithNoPublicConstructors()
@@ -849,6 +897,61 @@ namespace FakeItEasy.Specs
             [SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "unused", Justification = "This is just a dummy argument.")]
             public ClassThatRequiresClassWhoseDummyIsNull(ClassWhoseDummyIsNull unused)
             {
+            }
+        }
+
+#pragma warning disable CA1815 // Override equals and operator equals on value types
+        public struct StructWithLongConstructor
+#pragma warning restore CA1815 // Override equals and operator equals on value types
+        {
+            public string CalledConstructor { get; set; }
+
+            [SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "i", Justification = "Required for testing.")]
+            public StructWithLongConstructor(int i)
+            {
+                this.CalledConstructor = "(int)";
+            }
+
+            [SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "s", Justification = "Required for testing.")]
+            [SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "i", Justification = "Required for testing.")]
+
+            public StructWithLongConstructor(string s, int i)
+            {
+                this.CalledConstructor = "(string, int)";
+            }
+        }
+
+#pragma warning disable CA1815 // Override equals and operator equals on value types
+        public struct StructWithLongConstructorWhoseArgumentsCannotBeResolved
+#pragma warning restore CA1815 // Override equals and operator equals on value types
+        {
+            public string CalledConstructor { get; }
+
+            [SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "i", Justification = "Required for testing.")]
+            public StructWithLongConstructorWhoseArgumentsCannotBeResolved(int i)
+            {
+                this.CalledConstructor = "(int)";
+            }
+
+            [SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "c", Justification = "Required for testing.")]
+            [SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "i", Justification = "Required for testing.")]
+            public StructWithLongConstructorWhoseArgumentsCannotBeResolved(ClassWhoseDummyFactoryThrows c, int i)
+            {
+                this.CalledConstructor = "(ClassWhoseDummyFactoryThrows, int)";
+            }
+        }
+
+#pragma warning disable CA1815 // Override equals and operator equals on value types
+        public struct StructWithSingleConstructorWhoseArgumentsCannotBeResolved
+#pragma warning restore CA1815 // Override equals and operator equals on value types
+        {
+            public string CalledConstructor { get; set; }
+
+            [SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "c", Justification = "Required for testing.")]
+            [SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "i", Justification = "Required for testing.")]
+            public StructWithSingleConstructorWhoseArgumentsCannotBeResolved(ClassWhoseDummyFactoryThrows c, int i)
+            {
+                this.CalledConstructor = "(ClassWhoseDummyFactoryThrows, int)";
             }
         }
     }

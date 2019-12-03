@@ -29,9 +29,11 @@ namespace FakeItEasy.Creation
                     new ResolveByCreatingTaskStrategy(),
                     new ResolveByCreatingLazyStrategy(),
                     new ResolveByCreatingTupleStrategy(),
-                    new ResolveByActivatingValueTypeStrategy(),
+
+                    // new ResolveByActivatingPrimitiveTypeStrategy(),
                     new ResolveByCreatingFakeStrategy(fakeObjectCreator),
-                    new ResolveByInstantiatingClassUsingDummyValuesAsConstructorArgumentsStrategy()
+                    new ResolveByInstantiatingClassUsingDummyValuesAsConstructorArgumentsStrategy(),
+                    new ResolveByActivatingValueTypeStrategy()
                 };
         }
 
@@ -92,6 +94,22 @@ namespace FakeItEasy.Creation
                 LoopDetectingResolutionContext resolutionContext)
             {
                 if (typeOfDummy.GetTypeInfo().IsValueType && typeOfDummy != typeof(void))
+                {
+                    return CreationResult.SuccessfullyCreated(Activator.CreateInstance(typeOfDummy));
+                }
+
+                return CreationResult.FailedToCreateDummy(typeOfDummy, "It is not a value type.");
+            }
+        }
+
+        private class ResolveByActivatingPrimitiveTypeStrategy : ResolveStrategy
+        {
+            public override CreationResult TryCreateDummyValue(
+                Type typeOfDummy,
+                IDummyValueResolver resolver,
+                LoopDetectingResolutionContext resolutionContext)
+            {
+                if (typeOfDummy.GetTypeInfo().IsPrimitive)
                 {
                     return CreationResult.SuccessfullyCreated(Activator.CreateInstance(typeOfDummy));
                 }
@@ -306,6 +324,11 @@ namespace FakeItEasy.Creation
 
                 if (consideredConstructors.Any())
                 {
+                    //if (typeOfDummy.GetTypeInfo().IsValueType)
+                    //{
+                    //    return CreationResult.SuccessfullyCreated(Activator.CreateInstance(typeOfDummy));
+                    //}
+
                     return CreationResult.FailedToCreateDummy(typeOfDummy, consideredConstructors);
                 }
 
