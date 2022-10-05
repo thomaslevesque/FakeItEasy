@@ -31,7 +31,9 @@ namespace FakeItEasy.Core
             var methodInvokedByFirst = this.GetMethodOnTypeThatWillBeInvokedByMethodInfo(target, first);
             var methodInvokedBySecond = this.GetMethodOnTypeThatWillBeInvokedByMethodInfo(target, second);
 
-            return methodInvokedByFirst is not null && methodInvokedBySecond is not null && methodInvokedByFirst.Equals(methodInvokedBySecond);
+            return methodInvokedByFirst is not null &&
+                   methodInvokedBySecond is not null &&
+                   AreMatchingMethods(methodInvokedByFirst, methodInvokedBySecond);
         }
 
         public virtual MethodInfo? GetMethodOnTypeThatWillBeInvokedByMethodInfo(Type type, MethodInfo method)
@@ -115,6 +117,38 @@ namespace FakeItEasy.Core
         private static bool TypeImplementsInterface(Type type, Type interfaceType)
         {
             return type.GetInterfaces().Any(x => x.Equals(interfaceType));
+        }
+
+        private static bool AreMatchingMethods(MethodInfo first, MethodInfo second)
+        {
+            if (first.Equals(second))
+            {
+                return true;
+            }
+
+            if (!first.IsGenericMethod || !second.IsGenericMethod)
+            {
+                return false;
+            }
+
+            if (!first.HasSameBaseMethodAs(second))
+            {
+                return false;
+            }
+
+            var firstTypeArgs = first.GetGenericArguments();
+            var secondTypeArgs = second.GetGenericArguments();
+            return firstTypeArgs.Zip(secondTypeArgs, AreMatchingTypeArgs).All(match => match);
+        }
+
+        private static bool AreMatchingTypeArgs(Type first, Type second)
+        {
+            if (first == second)
+            {
+                return true;
+            }
+
+            return first == typeof(AnyType) || second == typeof(AnyType);
         }
 
         private struct TypeMethodInfoPair : IEquatable<TypeMethodInfoPair>
