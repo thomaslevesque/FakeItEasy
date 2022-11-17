@@ -29,7 +29,7 @@ namespace FakeItEasy.Tests.Creation.CastleDynamicProxy
 
         public CastleDynamicProxyInterceptionValidatorTests()
         {
-            this.validator = new CastleDynamicProxyInterceptionValidator(new MethodInfoManager());
+            this.validator = new CastleDynamicProxyInterceptionValidator(new MethodInfoManager(new GenericTypeArgumentMatcher()));
         }
 
         public static IEnumerable<object?[]> NonInterceptableMembers()

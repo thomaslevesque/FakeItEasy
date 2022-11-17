@@ -9,7 +9,7 @@ namespace FakeItEasy.Tests
         [SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors", Justification = "CreateCosntraint has no unsafe side effects.")]
         protected ArgumentConstraintTestBase()
         {
-            this.CreateConstraint(new DefaultArgumentConstraintManager<T>(x => this.Constraint = x));
+            this.CreateConstraint(new DefaultArgumentConstraintManager<T>(x => this.Constraint = x, new GenericTypeArgumentMatcher()));
         }
 
         protected abstract void CreateConstraint(INegatableArgumentConstraintManager<T> scope);

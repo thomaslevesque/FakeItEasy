@@ -13,6 +13,13 @@ namespace FakeItEasy.Core
     {
         private static readonly ConcurrentDictionary<TypeMethodInfoPair, MethodInfo?> MethodCache = new ConcurrentDictionary<TypeMethodInfoPair, MethodInfo?>();
 
+        private readonly GenericTypeArgumentMatcher genericTypeArgumentMatcher;
+
+        public MethodInfoManager(GenericTypeArgumentMatcher genericTypeArgumentMatcher)
+        {
+            this.genericTypeArgumentMatcher = genericTypeArgumentMatcher;
+        }
+
         /// <summary>
         /// Gets a value indicating whether the two instances of <see cref="MethodInfo"/> would invoke the same method
         /// if invoked on an instance of the target type.
@@ -33,7 +40,7 @@ namespace FakeItEasy.Core
 
             return methodInvokedByFirst is not null &&
                    methodInvokedBySecond is not null &&
-                   AreMatchingMethods(methodInvokedByFirst, methodInvokedBySecond);
+                   this.AreMatchingMethods(methodInvokedByFirst, methodInvokedBySecond);
         }
 
         public virtual MethodInfo? GetMethodOnTypeThatWillBeInvokedByMethodInfo(Type type, MethodInfo method)
@@ -119,7 +126,7 @@ namespace FakeItEasy.Core
             return type.GetInterfaces().Any(x => x.Equals(interfaceType));
         }
 
-        private static bool AreMatchingMethods(MethodInfo first, MethodInfo second)
+        private bool AreMatchingMethods(MethodInfo first, MethodInfo second)
         {
             if (first.Equals(second))
             {
@@ -138,17 +145,7 @@ namespace FakeItEasy.Core
 
             var firstTypeArgs = first.GetGenericArguments();
             var secondTypeArgs = second.GetGenericArguments();
-            return firstTypeArgs.Zip(secondTypeArgs, AreMatchingTypeArgs).All(match => match);
-        }
-
-        private static bool AreMatchingTypeArgs(Type first, Type second)
-        {
-            if (first == second)
-            {
-                return true;
-            }
-
-            return first == typeof(AnyType) || second == typeof(AnyType);
+            return firstTypeArgs.Zip(secondTypeArgs, this.genericTypeArgumentMatcher.AreMatchingTypes).All(match => match);
         }
 
         private struct TypeMethodInfoPair : IEquatable<TypeMethodInfoPair>

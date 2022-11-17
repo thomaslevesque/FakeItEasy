@@ -12,7 +12,7 @@ namespace FakeItEasy.Tests.Core
         public DefaultArgumentConstraintManagerTests()
         {
             this.createdConstraint = null!; // it will be assigned a non-null value by the time it's accessed
-            this.constraintManager = new DefaultArgumentConstraintManager<string>(x => this.createdConstraint = x);
+            this.constraintManager = new DefaultArgumentConstraintManager<string>(x => this.createdConstraint = x, new GenericTypeArgumentMatcher());
         }
 
         [Theory]

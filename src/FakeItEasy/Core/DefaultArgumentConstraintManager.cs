@@ -6,17 +6,19 @@ namespace FakeItEasy.Core
         : INegatableArgumentConstraintManager<T>
     {
         private readonly Action<IArgumentConstraint> onConstraintCreated;
+        private readonly GenericTypeArgumentMatcher genericTypeArgumentMatcher;
 
-        public DefaultArgumentConstraintManager(Action<IArgumentConstraint> onConstraintCreated)
+        public DefaultArgumentConstraintManager(Action<IArgumentConstraint> onConstraintCreated, GenericTypeArgumentMatcher genericTypeArgumentMatcher)
         {
             this.onConstraintCreated = onConstraintCreated;
+            this.genericTypeArgumentMatcher = genericTypeArgumentMatcher;
         }
 
         public IArgumentConstraintManager<T> Not => new NotArgumentConstraintManager(this);
 
         public T Matches(Func<T, bool> predicate, Action<IOutputWriter> descriptionWriter)
         {
-            this.onConstraintCreated(new MatchesConstraint(predicate, descriptionWriter));
+            this.onConstraintCreated(new MatchesConstraint(predicate, descriptionWriter, this.genericTypeArgumentMatcher));
             return default!;
         }
 
@@ -49,11 +51,13 @@ namespace FakeItEasy.Core
 
             private readonly Func<T, bool> predicate;
             private readonly Action<IOutputWriter> descriptionWriter;
+            private readonly GenericTypeArgumentMatcher genericTypeArgumentMatcher;
 
-            public MatchesConstraint(Func<T, bool> predicate, Action<IOutputWriter> descriptionWriter)
+            public MatchesConstraint(Func<T, bool> predicate, Action<IOutputWriter> descriptionWriter, GenericTypeArgumentMatcher genericTypeArgumentMatcher)
             {
                 this.predicate = predicate;
                 this.descriptionWriter = descriptionWriter;
+                this.genericTypeArgumentMatcher = genericTypeArgumentMatcher;
             }
 
             public Type Type => typeof(T);
@@ -77,7 +81,7 @@ namespace FakeItEasy.Core
 
             bool IArgumentConstraint.IsValid(object? argument)
             {
-                if (!IsValueValidForType(argument))
+                if (!this.IsValueValidForType(argument))
                 {
                     return false;
                 }
@@ -92,14 +96,14 @@ namespace FakeItEasy.Core
                 }
             }
 
-            private static bool IsValueValidForType(object? argument)
+            private bool IsValueValidForType(object? argument)
             {
                 if (argument is null)
                 {
                     return IsNullable;
                 }
 
-                return argument is T;
+                return argument is T || this.genericTypeArgumentMatcher.AreMatchingTypes(argument.GetType(), typeof(T));
             }
 
             private string GetDescription()

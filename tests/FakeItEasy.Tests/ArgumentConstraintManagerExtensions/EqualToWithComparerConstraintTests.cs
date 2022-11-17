@@ -44,7 +44,7 @@ namespace FakeItEasy.Tests.ArgumentConstraintManagerExtensions
         public void IsEqualTo_should_be_null_guarded_when_comparer_is_null()
         {
             // Arrange
-            var constraintManager = new DefaultArgumentConstraintManager<string>(x => { });
+            var constraintManager = new DefaultArgumentConstraintManager<string>(x => { }, new GenericTypeArgumentMatcher());
             Expression<Action> call = () => constraintManager.IsEqualTo(null!, StringComparer.OrdinalIgnoreCase);
 
             // Act

@@ -168,7 +168,7 @@ namespace FakeItEasy.Tests.Core
 
         private MethodInfoManager CreateManager()
         {
-            return new MethodInfoManager();
+            return new MethodInfoManager(new GenericTypeArgumentMatcher());
         }
 
         public class ConcreteWithExplicitImplementation : IInterface

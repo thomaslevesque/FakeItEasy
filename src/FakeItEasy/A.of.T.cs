@@ -3,6 +3,7 @@ namespace FakeItEasy
     using System;
     using System.ComponentModel;
     using System.Diagnostics.CodeAnalysis;
+    using Core;
 
     /// <summary>
     /// Provides an API entry point for constraining arguments of fake object calls.
@@ -37,6 +38,24 @@ namespace FakeItEasy
         public static T Ignored
         {
             get { return That.Matches(x => true, x => x.Write(nameof(Ignored))); }
+        }
+
+        public static class OfAnyType
+        {
+            [SuppressMessage("Microsoft.Design", "CA1000:DoNotDeclareStaticMembersOnGenericTypes", Justification = "This is a special case where the type parameter acts as an entry point into the fluent api.")]
+            public static IAnyTypeNegatableArgumentConstraintManager<T> That =>
+                ServiceLocator.Resolve<IArgumentConstraintManagerFactory>().CreateAnyType<T>();
+
+            [SuppressMessage("Microsoft.Design", "CA1000:DoNotDeclareStaticMembersOnGenericTypes", Justification = "This is a special case where the type parameter acts as an entry point into the fluent api.")]
+            [SuppressMessage("Microsoft.Naming", "CA1707:IdentifiersShouldNotContainUnderscores", Justification = "But it's kinda cool right?")]
+            [EditorBrowsable(EditorBrowsableState.Never)]
+            [CLSCompliant(false)]
+#pragma warning disable SA1300 // Element must begin with upper-case letter
+            public static T _ => Ignored;
+#pragma warning restore SA1300 // Element must begin with upper-case letter
+
+            [SuppressMessage("Microsoft.Design", "CA1000:DoNotDeclareStaticMembersOnGenericTypes", Justification = "This is a special case where the type parameter acts as an entry point into the fluent api.")]
+            public static T Ignored => That.Matches(x => true, x => x.Write(nameof(Ignored)));
         }
     }
 }

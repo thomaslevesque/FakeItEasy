@@ -4,7 +4,6 @@ namespace FakeItEasy
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
-    using System.Text;
     using FakeItEasy.Configuration;
     using FakeItEasy.Core;
     using FakeItEasy.Creation;
@@ -44,7 +43,8 @@ namespace FakeItEasy
 
             var implicitOptionsBuilderCatalogue = new ImplicitOptionsBuilderCatalogue(fakeOptionsBuilders);
 
-            var methodInfoManager = new MethodInfoManager();
+            var genericTypeArgumentMatcher = new GenericTypeArgumentMatcher();
+            var methodInfoManager = new MethodInfoManager(genericTypeArgumentMatcher);
             var argumentConstraintTrap = new ArgumentConstraintTrap();
             var expressionArgumentConstraintFactory = new ExpressionArgumentConstraintFactory(argumentConstraintTrap);
 
@@ -79,7 +79,7 @@ namespace FakeItEasy
                     fakeObjectCreator,
                     proxyOptionsFactory));
 
-            registrar.Register<IArgumentConstraintManagerFactory>(new ArgumentConstraintManagerFactory());
+            registrar.Register<IArgumentConstraintManagerFactory>(new ArgumentConstraintManagerFactory(genericTypeArgumentMatcher));
 
             registrar.Register(new EventHandlerArgumentProviderMap());
 
@@ -142,9 +142,21 @@ namespace FakeItEasy
         private class ArgumentConstraintManagerFactory
             : IArgumentConstraintManagerFactory
         {
+            private readonly GenericTypeArgumentMatcher genericTypeArgumentMatcher;
+
+            public ArgumentConstraintManagerFactory(GenericTypeArgumentMatcher genericTypeArgumentMatcher)
+            {
+                this.genericTypeArgumentMatcher = genericTypeArgumentMatcher;
+            }
+
             public INegatableArgumentConstraintManager<T> Create<T>()
             {
-                return new DefaultArgumentConstraintManager<T>(ArgumentConstraintTrap.ReportTrappedConstraint);
+                return new DefaultArgumentConstraintManager<T>(ArgumentConstraintTrap.ReportTrappedConstraint, this.genericTypeArgumentMatcher);
+            }
+
+            public IAnyTypeNegatableArgumentConstraintManager<T> CreateAnyType<T>()
+            {
+                return new AnyTypeArgumentConstraintManager<T>(ArgumentConstraintTrap.ReportTrappedConstraint);
             }
         }
 
