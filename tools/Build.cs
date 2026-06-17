@@ -1,3 +1,8 @@
+// SA1649: File name should match first type name
+#:property NoWarn=$(NoWarn),SA1649
+#:package Bullseye@3.5.0
+#:package SimpleExec@6.3.0
+
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;

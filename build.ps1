@@ -1,7 +1,7 @@
 #!/usr/bin/env pwsh
 try {
     Push-Location $PSScriptRoot
-    dotnet run --project "./tools/FakeItEasy.Build" -- $args
+    dotnet run "./tools/Build.cs" -- $args
     if ($LASTEXITCODE) { Throw "Build failed with exit code $LASTEXITCODE." }
 }
 finally {
