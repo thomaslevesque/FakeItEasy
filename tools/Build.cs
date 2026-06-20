@@ -1,7 +1,8 @@
 // SA1649: File name should match first type name
-#:property NoWarn=$(NoWarn),SA1649
-#:package Bullseye@3.5.0
-#:package SimpleExec@6.3.0
+// CA2007: Consider calling ConfigureAwait on the awaited task
+#:property NoWarn=$(NoWarn),SA1649,CA2007
+#:package Bullseye@6.1.0
+#:package SimpleExec@13.0.0
 
 using System.Text;
 using System.Text.RegularExpressions;
@@ -11,37 +12,37 @@ using static Bullseye.Targets;
 using static SimpleExec.Command;
 
 Project[] projectsToPack =
-{
+[
     "src/FakeItEasy/FakeItEasy.csproj",
     "src/FakeItEasy.Extensions.ValueTask/FakeItEasy.Extensions.ValueTask.csproj"
-};
+];
 
 var testSuites = new Dictionary<string, string[]>
 {
-    ["unit"] = new[]
-    {
+    ["unit"] =
+    [
         "tests/FakeItEasy.Tests"
-    },
-    ["integ"] = new[]
-    {
+    ],
+    ["integ"] =
+    [
         "tests/FakeItEasy.IntegrationTests",
-        "tests/FakeItEasy.IntegrationTests.VB",
-    },
-    ["spec"] = new[]
-    {
+        "tests/FakeItEasy.IntegrationTests.VB"
+    ],
+    ["spec"] =
+    [
         "tests/FakeItEasy.Specs"
-    },
-    ["recipes"] = new[]
-    {
+    ],
+    ["recipes"] =
+    [
         "recipes/FakeItEasy.Recipes.CSharp"
-    },
-    ["approve"] = new[]
-    {
+    ],
+    ["approve"] =
+    [
         "tests/FakeItEasy.Tests.Approval"
-    }
+    ]
 };
 
-Target("default", DependsOn("unit", "integ", "spec", "recipes", "approve", "pack"));
+Target("default", dependsOn: ["unit", "integ", "spec", "recipes", "approve", "pack"]);
 
 Target(
     "build",
@@ -51,20 +52,20 @@ foreach (var testSuite in testSuites)
 {
     Target(
         testSuite.Key,
-        DependsOn("build"),
+        dependsOn: ["build"],
         forEach: testSuite.Value,
         action: testDirectory => Run("dotnet", "test --configuration Release --no-build --nologo -- RunConfiguration.NoAutoReporters=true", testDirectory));
 }
 
 Target(
     "pack",
-    DependsOn("build"),
+    dependsOn: ["build"],
     forEach: projectsToPack,
     action: project => Run("dotnet", $"pack {project.Path} --configuration Release --no-build --nologo --output \"{Path.GetFullPath("artifacts/output")}\""));
 
-Target("docs", DependsOn("generate-docs"));
+Target("docs", dependsOn: ["generate-docs"]);
 
-Target("check-links", DependsOn("check-docs-links", "check-readme-links"));
+Target("check-links", dependsOn: ["check-docs-links", "check-readme-links"]);
 
 // If mkdocs's site_url configuration is not set, sitemap.xml is full of "None" links.
 // Even with a valid site_url, the link check would fail if we added a new page.
@@ -73,7 +74,7 @@ Target("check-links", DependsOn("check-docs-links", "check-readme-links"));
 // We use a custom User Agent because Github doesn't like the default (LinkChecker/X.Y) and returns a 404.
 Target(
     "check-docs-links",
-    DependsOn("generate-docs"),
+    dependsOn: ["generate-docs"],
     () => Run(
         "uv",
         "run linkchecker --config=.linkcheckerrc --ignore-url=sitemap.xml --ignore-url=404.html --check-extern --user-agent=FakeItEasyDocs/1.0 -F html/utf-8/../artifacts/docs-link-check.html ../artifacts/docs/index.html",
@@ -81,7 +82,7 @@ Target(
 
 Target(
     "generate-docs",
-    DependsOn("create-python-version-file"),
+    dependsOn: ["create-python-version-file"],
     () => Run("uv", "run mkdocs build --clean --site-dir ../artifacts/docs --config-file mkdocs.yml --strict", "docs"));
 
 Target(
@@ -140,7 +141,7 @@ foreach (var profile in Directory.EnumerateFiles("profiles", "*.props").Select(P
 {
     Target(
         "use-profile-" + profile,
-        DependsOn("initialize-user-properties"),
+        dependsOn: ["initialize-user-properties"],
         () =>
         {
             var xmlDoc = XDocument.Load("FakeItEasy.user.props");
@@ -167,7 +168,7 @@ foreach (var profile in Directory.EnumerateFiles("profiles", "*.props").Select(P
         });
 }
 
-RunTargetsAndExit(args, messageOnly: ex => ex is NonZeroExitCodeException);
+await RunTargetsAndExitAsync(args, messageOnly: ex => ex is ExitCodeException);
 
 file sealed record Project(string Path)
 {
